@@ -34,8 +34,6 @@ pipeline{
         when { expression { params.action == 'create'}}    
             steps{                
                 script{
-		    println(env.DOCKER_HUB_USERNAME)
-                    println(env.IMAGE_NAME)
                     sonarqubeAnalysis()
                 }
             }
