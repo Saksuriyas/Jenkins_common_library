@@ -7,13 +7,13 @@ def COLOR_MAP = [
 pipeline{
     agent any
     parameters {
-        choice(name: 'env_action', choices: 'deploy\ndelete', description: 'Select deploy or rollback.')
+        choice(name: 'ACTION', choices: 'deploy\ndelete', description: 'Select deploy or rollback.')
         
-        string(name: 'env_repo_url', defaultValue: 'https://github.com/Saksuriyas/poc-app-youtube.git', description: 'Git Repository URL.')
-        string(name: 'env_branch_name', defaultValue: 'main', description: 'Branch Name')
+        string(name: 'GIT_URL', defaultValue: 'https://github.com/Saksuriyas/poc-app-youtube.git', description: 'Git Repository URL.')
+        string(name: 'BRANCE_NAME', defaultValue: 'main', description: 'Branch Name')
 
-        string(name: 'env_user_name', defaultValue: 'saksuriyas', description: 'Docker Hub Username')
-        string(name: 'env_project_name', defaultValue: 'youtube', description: 'Docker Project/Image Name')
+        string(name: 'USER_NAME', defaultValue: 'saksuriyas', description: 'Docker Hub Username')
+        string(name: 'REPO_NAME', defaultValue: 'youtube', description: 'Docker Project/Image Name')
     }
     tools{
         jdk 'jdk17'
@@ -30,19 +30,19 @@ pipeline{
         }
         stage('checkout from Git'){
             steps{
-                checkoutGit('$env_repo_url', '$env_branch_name')
+                checkoutGit()
             }
         }
         stage('sonarqube Analysis'){
-        when { expression { params.env_action == 'deploy'}}    
+        when { expression { params.ACTION == 'deploy'}}    
             steps{                
                 script{
-                    sonarqubeAnalysis('$env_project_name')
+                    sonarqubeAnalysis()
                 }
             }
         }
         stage('sonarqube QualitGate'){
-        when { expression { params.env_action == 'deploy'}}    
+        when { expression { params.ACTION == 'deploy'}}    
             steps{
                 script{
                     def credentialsId = 'sonar-token'
@@ -51,13 +51,13 @@ pipeline{
             }
         }
         stage('Npm Install'){
-        when { expression { params.env_action == 'deploy'}}    
+        when { expression { params.ACTION == 'deploy'}}    
             steps{
                 npmInstall()
             }
         }
         stage('Trivy file scan'){
-        when { expression { params.env_action == 'deploy'}}    
+        when { expression { params.ACTION == 'deploy'}}    
             steps{
                 trivyFs()
             }
@@ -69,7 +69,7 @@ pipeline{
             }
         }
         stage('Docker Build'){
-        when { expression { params.env_action == 'deploy'}}    
+        when { expression { params.ACTION == 'deploy'}}    
             steps{
                 script{
                    dockerBuild()
@@ -77,13 +77,13 @@ pipeline{
             }
         }
         stage('Trivy iamge'){
-        when { expression { params.env_action == 'deploy'}}    
+        when { expression { params.ACTION == 'deploy'}}    
             steps{
                 trivyImage()
             }
         }
         stage('Run container'){
-        when { expression { params.env_action == 'deploy'}}    
+        when { expression { params.ACTION == 'deploy'}}    
             steps{
 				script{
 				   runContainer()
@@ -92,7 +92,7 @@ pipeline{
             }
         }
         stage('Remove container'){
-        when { expression { params.env_action == 'rollback'}}    
+        when { expression { params.ACTION == 'rollback'}}    
             steps{
 				script{         
 				   removeContainer()
@@ -100,13 +100,13 @@ pipeline{
             }
         }
         stage('Kube deploy'){
-        when { expression { params.env_action == 'deploy'}}    
+        when { expression { params.ACTION == 'deploy'}}    
             steps{
                 kubeDeploy()
             }
         }
         stage('Kube deleter'){
-        when { expression { params.env_action == 'rollback'}}    
+        when { expression { params.ACTION == 'rollback'}}    
             steps{
                 kubeDelete()
             }
