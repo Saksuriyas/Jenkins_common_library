@@ -7,10 +7,13 @@ def COLOR_MAP = [
 pipeline{
     agent any
     parameters {
-        choice(name: 'action', choices: 'create\ndelete', description: 'Select create or destroy.')
+        choice(name: 'env_action', choices: 'deploy\ndelete', description: 'Select deploy or rollback.')
         
-        string(name: 'DOCKER_HUB_USERNAME', defaultValue: 'saksuriyas', description: 'Docker Hub Username')
-        string(name: 'IMAGE_NAME', defaultValue: 'youtube', description: 'Docker Image Name')
+        string(name: 'env_repo_url', defaultValue: 'https://github.com/Saksuriyas/poc-app-youtube.git', description: 'Git Repository URL.')
+        string(name: 'env_branch_name', defaultValue: 'main', description: 'Branch Name')
+
+        string(name: 'env_user_name', defaultValue: 'saksuriyas', description: 'Docker Hub Username')
+        string(name: 'env_image_name', defaultValue: 'youtube', description: 'Docker Image Name')
     }
     tools{
         jdk 'jdk17'
@@ -27,11 +30,13 @@ pipeline{
         }
         stage('checkout from Git'){
             steps{
-                checkoutGit('https://github.com/Saksuriyas/poc-app-youtube.git', 'main')
+                def gitUrl = params.env_repo_url
+                def gitBranch = params.env_branch_name
+                checkoutGit('$gitUrl', '$gitBranch')
             }
         }
         stage('sonarqube Analysis'){
-        when { expression { params.action == 'create'}}    
+        when { expression { params.env_action == 'deploy'}}    
             steps{                
                 script{
                     sonarqubeAnalysis()
@@ -39,7 +44,7 @@ pipeline{
             }
         }
         stage('sonarqube QualitGate'){
-        when { expression { params.action == 'create'}}    
+        when { expression { params.env_action == 'deploy'}}    
             steps{
                 script{
                     def credentialsId = 'sonar-token'
@@ -48,13 +53,13 @@ pipeline{
             }
         }
         stage('Npm Install'){
-        when { expression { params.action == 'create'}}    
+        when { expression { params.env_action == 'deploy'}}    
             steps{
                 npmInstall()
             }
         }
         stage('Trivy file scan'){
-        when { expression { params.action == 'create'}}    
+        when { expression { params.env_action == 'deploy'}}    
             steps{
                 trivyFs()
             }
@@ -66,7 +71,7 @@ pipeline{
             }
         }
         stage('Docker Build'){
-        when { expression { params.action == 'create'}}    
+        when { expression { params.env_action == 'deploy'}}    
             steps{
                 script{
                    dockerBuild()
@@ -74,13 +79,13 @@ pipeline{
             }
         }
         stage('Trivy iamge'){
-        when { expression { params.action == 'create'}}    
+        when { expression { params.env_action == 'deploy'}}    
             steps{
                 trivyImage()
             }
         }
         stage('Run container'){
-        when { expression { params.action == 'create'}}    
+        when { expression { params.env_action == 'deploy'}}    
             steps{
 				script{
 				   runContainer()
@@ -89,7 +94,7 @@ pipeline{
             }
         }
         stage('Remove container'){
-        when { expression { params.action == 'delete'}}    
+        when { expression { params.env_action == 'rollback'}}    
             steps{
 				script{         
 				   removeContainer()
@@ -97,13 +102,13 @@ pipeline{
             }
         }
         stage('Kube deploy'){
-        when { expression { params.action == '*create'}}    
+        when { expression { params.env_action == 'deploy'}}    
             steps{
                 kubeDeploy()
             }
         }
         stage('Kube deleter'){
-        when { expression { params.action == '*delete'}}    
+        when { expression { params.env_action == 'rollback'}}    
             steps{
                 kubeDelete()
             }
