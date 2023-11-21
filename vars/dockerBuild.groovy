@@ -1,3 +1,9 @@
+#!/usr/bin/env groovy
+
+/**
+ * Docker build image & push images to repository
+ */
+
 def call() {
     sh "docker build -t $REPO_NAME ."
     sh "docker tag $REPO_NAME $USER_NAME/$REPO_NAME:latest"

@@ -11,9 +11,9 @@ pipeline{
         
         string(name: 'GIT_URL', defaultValue: 'https://github.com/Saksuriyas/poc-app-youtube.git', description: 'Git Repository URL.')
         string(name: 'BRANCE_NAME', defaultValue: 'main', description: 'Branch Name')
-
         string(name: 'USER_NAME', defaultValue: 'saksuriyas', description: 'Docker Hub Username')
         string(name: 'REPO_NAME', defaultValue: 'youtube', description: 'Docker Project/Image Name')
+        string(name: 'EMAILS', defaultValue: 'saksuriya@dtac.co.th', description: 'Emails for approve & Pipeline result')
     }
     tools{
         jdk 'jdk17'

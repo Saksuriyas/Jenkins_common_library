@@ -1,3 +1,9 @@
+#!/usr/bin/env groovy
+
+/**
+ * Git Checkout by branch
+ */
+
 def call() {
     checkout([
         $class: 'GitSCM',

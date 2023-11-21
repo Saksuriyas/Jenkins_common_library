@@ -3,6 +3,8 @@ def COLOR_MAP = [
     'SUCCESS' : 'good'
 ]
 
+def userInput = false
+
 pipeline{
     agent any
     tools{
@@ -16,6 +18,47 @@ pipeline{
         stage('clean workspace'){
             steps{
                 cleanWs()
+            }
+        }
+        stage('Approval email'){
+            steps{
+                emailext (
+                    subject: "Waiting for your Approval! Job: '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                    body: '''${JELLY_SCRIPT,template="html"}
+                        <h2>Started: Job '${JOB_NAME} ${BUILD_NUMBER}':</h2>
+                        <h3>Please approve the build '${BUILD_NUMBER}'</h3>
+                        <h3>To Approve Please click here:</h3><br>
+                        <a href="${BUILD_URL}input"><button><b>Approve</b></button></a></h3>
+                    ''', mimeType: 'text/html',
+                    to: 'saksuriya@dtac.co.th, info@mail.com'
+                )
+                echo "Promotion triggered by email"
+            }
+        }
+        stage('Get approval'){
+            steps{
+                script {                    
+                    userInput = input(id: 'Approve', 
+                                        message: 'Approve build?', 
+                                        parameters: [[$class: 'BooleanParameterDefinition', defaultValue: true, description: '', name: 'Please confirm you agree with this']], 
+                                        ok: 'Approve'
+                                    )
+                    echo 'userInput: ' + userInput
+                    if(userInput == true) {
+                        echo "Build has been approved"
+                    }
+                    else {
+                        echo "Action was aborted."
+                    }
+                }
+            }
+        }
+        stage('verify Approval'){
+        when { expression { userInput == true}}    
+            steps{
+                script{
+                    echo "Next stage.."
+                }
             }
         }
         stage('checkout from Git'){
@@ -86,25 +129,23 @@ pipeline{
         }
     }
     post {
-    always {
-        echo 'Slack Notifications'
-        slackSend (
-            channel: '#jenkins',
-            color: COLOR_MAP[currentBuild.currentResult],
-            message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} \n build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
-        )
-    }
-	post {
-     always {
-		echo 'Email Notifications'
-        emailext attachLog: true,
-            subject: "'${currentBuild.result}'",
-            body: "Project: ${env.JOB_NAME}<br/>" +
-                "Build Number: ${env.BUILD_NUMBER}<br/>" +
-                "URL: ${env.BUILD_URL}<br/>",
-            to: 'postbox.saksuriyas@gmail.com',
-            attachmentsPattern: 'trivy.txt'
+        always {
+            echo 'Slack Notifications'
+            slackSend (
+                channel: '#jenkins',
+                color: COLOR_MAP[currentBuild.currentResult],
+                message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} \n build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
+            )
+            echo 'Email Notifications'
+            emailext (
+                attachLog: true,
+                subject: "'${currentBuild.result}'",
+                body: "Project: ${env.JOB_NAME}<br/>" +
+                    "Build Number: ${env.BUILD_NUMBER}<br/>" +
+                    "URL: ${env.BUILD_URL}<br/>",
+                to: 'saksuriya@dtac.co.th',
+                attachmentsPattern: 'trivy.txt'
+            )
         }
     }
-}
 }
