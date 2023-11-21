@@ -1,4 +1,4 @@
 def call(){
-    sh 'docker stop $IMAGE_NAME'
-    sh 'docker rm $IMAGE_NAME'
+    sh 'docker stop $REPO_NAME'
+    sh 'docker rm $REPO_NAME'
 }

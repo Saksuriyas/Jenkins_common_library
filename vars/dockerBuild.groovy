@@ -1,7 +1,7 @@
 def call() {
-    sh "docker build -t $IMAGE_NAME ."
-    sh "docker tag $IMAGE_NAME $DOCKER_HUB_USERNAME/$IMAGE_NAME:latest"
+    sh "docker build -t $REPO_NAME ."
+    sh "docker tag $REPO_NAME $USER_NAME/$REPO_NAME:latest"
     withDockerRegistry([url: 'https://index.docker.io/v1/', credentialsId: 'docker']) {
-        sh "docker push $DOCKER_HUB_USERNAME/$IMAGE_NAME:latest"
+        sh "docker push $USER_NAME/$REPO_NAME:latest"
     }
 }

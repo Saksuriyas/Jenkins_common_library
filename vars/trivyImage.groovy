@@ -1,3 +1,3 @@
 def call() {
-    sh 'trivy image $DOCKER_HUB_USERNAME/$IMAGE_NAME:latest > trivyimage.txt'
+    sh 'trivy image $USER_NAME/$REPO_NAME:latest > trivyimage.txt'
 }
