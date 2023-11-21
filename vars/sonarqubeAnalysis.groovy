@@ -1,5 +1,5 @@
-def call() {
+def call(String projectName) {
     withSonarQubeEnv('sonar-server') {
-        sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=$IMAGE_NAME -Dsonar.projectKey=$IMAGE_NAME '''
+        sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=$projectName -Dsonar.projectKey=$projectName '''
     }
 }

@@ -13,7 +13,7 @@ pipeline{
         string(name: 'env_branch_name', defaultValue: 'main', description: 'Branch Name')
 
         string(name: 'env_user_name', defaultValue: 'saksuriyas', description: 'Docker Hub Username')
-        string(name: 'env_image_name', defaultValue: 'youtube', description: 'Docker Image Name')
+        string(name: 'env_project_name', defaultValue: 'youtube', description: 'Docker Project/Image Name')
     }
     tools{
         jdk 'jdk17'
@@ -30,16 +30,14 @@ pipeline{
         }
         stage('checkout from Git'){
             steps{
-                def gitUrl = params.env_repo_url
-                def gitBranch = params.env_branch_name
-                checkoutGit('$gitUrl', '$gitBranch')
+                checkoutGit('$env_repo_url', '$env_branch_name')
             }
         }
         stage('sonarqube Analysis'){
         when { expression { params.env_action == 'deploy'}}    
             steps{                
                 script{
-                    sonarqubeAnalysis()
+                    sonarqubeAnalysis('$env_project_name')
                 }
             }
         }
